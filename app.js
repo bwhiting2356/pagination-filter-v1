@@ -71,7 +71,7 @@ $(document).ready(function() {
                 currentPage = thisIndex;
                 $(this).parent().parent().find('.page-number').removeClass('active');
                 $(this).addClass('active');
-                showStudents();
+                showStudents(true);
             } 
         });
     }
@@ -79,20 +79,30 @@ $(document).ready(function() {
 
     var student_ul = $('.student-list');
 
-    function showStudents() {
-        student_ul.animate({
-                opacity: 0
-            }, 300, function() {
-                student_ul.empty();
-                student_ul.append(paginated_students[currentPage]);
-                if (paginated_students.length === 0) {
-                    student_ul.append($('<li class="no-results">No Results Found</li>'));
-                }
+    function showStudents(animate) {
+        if (animate === true) {
+            student_ul.animate({
+                    opacity: 0
+                }, 300, function() {
+                    student_ul.empty();
+                    student_ul.append(paginated_students[currentPage]);
+                    if (paginated_students.length === 0) {
+                        student_ul.append($('<li class="no-results">No Results Found</li>'));
+                    }
 
-                student_ul.animate({
-                    opacity: 1
-                }, 300);
-            });
+                    student_ul.animate({
+                        opacity: 1
+                    }, 300);
+                    makePageList();
+                });
+        } else {
+            student_ul.empty();
+            student_ul.append(paginated_students[currentPage]);
+            if (paginated_students.length === 0) {
+                student_ul.append($('<li class="no-results">No Results Found</li>'));
+            }
+            makePageList();
+        }
     }
     showStudents();
 
@@ -103,16 +113,11 @@ $(document).ready(function() {
 
     $('.student-search').find('input').keyup(function() {
         new_search_terms = $(this).val().toLowerCase().trim();
-
-        console.log(new_search_terms);
-        console.log(current_search_terms);
-        console.log(new_search_terms === current_search_terms);
-
         if (new_search_terms !== current_search_terms) {  // don't run the function again if nothing's changed
             var filtered_students = student_list.filter(function(i) {
                 var student_names = $(this).find('h3').text();
-                console.log(student_names);
-                if (student_names.indexOf(new_search_terms) > -1) {
+                var student_email = $(this).find('.email').text();
+                if ((student_names.indexOf(new_search_terms) > -1) || (student_email.indexOf(new_search_terms) > -1)) {
                     return true;
                 }
                 return false;
@@ -120,8 +125,15 @@ $(document).ready(function() {
             current_search_terms = new_search_terms;
             paginated_students = paginate(filtered_students);
             currentPage = 0;
-            showStudents();
-            makePageList();
+
+            window.clearTimeout(timeoutHandle);
+
+            var timeoutHandle = window.setTimeout(function() {
+                console.log('sent to console now');
+                showStudents(true);
+            }, 500);
+
+
         }
     });
 });
